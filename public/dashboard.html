@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>EscalaFácil - Dashboard</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#4a90e2" />
+</head>
+<body>
+  <header>
+    <h1>Dashboard</h1>
+  </header>
+
+  <nav class="menu">
+    <a href="funcionarios.html">Funcionários</a>
+    <a href="escala.html">Escala</a>
+    <a href="swap.html">Trocas de Folga</a>
+    <a href="availability.html">Disponibilidade</a>
+    <a href="report.html">Relatórios</a>
+    <a href="employee.html">Portal Funcionário</a>
+  </nav>
+
+  <main class="center">
+    <p>Bem‑vindo, <strong id="nome-gerente"></strong>!</p>
+
+  </main>
+
+  <script src="js/app.js"></script>
+  <script>
+    // Exibe nome do gerente
+    document.getElementById('nome-gerente').textContent =
+      localStorage.getItem('gerente') || 'Gerente';
+
+    // Conta trocas pendentes
+    const swaps = JSON.parse(localStorage.getItem('swap_requests')||'[]');
+    const pending = swaps.filter(s => s.status === 'pendente').length;
+    if (pending > 0) {
+      document.getElementById('swap-count').textContent = pending;
+      document.getElementById('swap-notif').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>EscalaFácil - Login Gerente</title>
+  <link rel="stylesheet" href="css/style.css" />
+
+    <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4a90e2">
+</head>
+<body>
+  <div class="container center">
+    <h1>EscalaFácil</h1>
+    <form id="login-form">
+      <input type="text" id="username" placeholder="Nome do gerente" required />
+      <button type="submit">Entrar</button>
+    </form>
+  </div>
+  <script src="js/app.js"></script>
+  <script>
+    document.getElementById('login-form').addEventListener('submit', e => {
+      e.preventDefault();
+      localStorage.setItem('gerente', document.getElementById('username').value.trim());
+      window.location.href = 'dashboard.html';
+    });
+  </script>
+</body>
+</html>

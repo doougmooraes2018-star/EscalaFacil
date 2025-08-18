@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0" />
+  <title>EscalaFácil - Escala de Folgas</title>
+  <link rel="stylesheet" href="css/style.css" />
+    <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4a90e2">
+</head>
+<body>
+  <header>
+    <h1>Escala de Folgas</h1>
+    <a class="btn-back" href="dashboard.html">← Voltar</a>
+  </header>
+
+  <main>
+    <div class="escala-controls">
+      <button id="prev-month">← Mês Anterior</button>
+      <span id="mes-ano"></span>
+      <button id="next-month">Próximo Mês →</button>
+    </div>
+
+    <div id="calendar-header" class="calendar-row">
+      <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div>
+      <div>Qui</div><div>Sex</div><div>Sáb</div>
+    </div>
+    <div id="calendar" class="calendar-grid"></div>
+
+    <div class="escala-actions">
+      <button id="salvar-escala">Salvar Escala</button>
+      <button id="exportar-csv">Exportar CSV</button>
+      <button id="ver-historico">Histórico</button>
+    </div>
+
+    <section id="historico" class="hidden">
+      <h2>Histórico de Alterações</h2>
+      <ul id="lista-historico"></ul>
+    </section>
+  </main>
+
+  <!-- Modal de atribuição com checkboxes -->
+  <div id="assignment-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Selecione Folga(s)</h3>
+      <div id="checkbox-list" class="checkbox-list"></div>
+      <div class="modal-buttons">
+        <button id="confirm-assign">Confirmar</button>
+        <button id="cancel-assign">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/sw.js"></script>
+  <script src="js/pages/escala.js"></script>
+</body>
+</html>

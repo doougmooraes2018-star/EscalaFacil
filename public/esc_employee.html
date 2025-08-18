@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>EscalaFácil - Meu Perfil</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Portal do Funcionário</h1>
+    <button id="logout-btn" class="btn-back">Logout</button>
+  </header>
+
+  <main>
+    <!-- 1. Minha Escala -->
+    <section class="portal-section">
+      <h2>Minha Escala Mensal</h2>
+      <div class="escala-controls">
+        <button id="prev-month">←</button>
+        <span id="mes-ano"></span>
+        <button id="next-month">→</button>
+      </div>
+      <div id="calendar-header" class="calendar-row">
+        <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div>
+        <div>Qui</div><div>Sex</div><div>Sáb</div>
+      </div>
+      <div id="calendar" class="calendar-grid"></div>
+    </section>
+
+    <!-- 2. Solicitar Troca de Folga -->
+    <section class="portal-section">
+      <h2>Solicitar Troca de Folga</h2>
+      <label>Dia: 
+        <select id="swap-day"></select>
+      </label>
+      <label>Com colega:
+        <select id="swap-with"></select>
+      </label>
+      <button id="swap-request">Enviar Solicitação</button>
+      <ul id="swap-list" class="swap-list"></ul>
+    </section>
+
+    <!-- 3. Chat Interno -->
+    <section class="portal-section">
+      <h2>Chat Interno</h2>
+      <div id="chat-window" class="chat-window"></div>
+      <div class="chat-input">
+        <input type="text" id="chat-msg" placeholder="Digite sua mensagem..." />
+        <button id="chat-send">Enviar</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/pages/esc_employee.js"></script>
+</body>
+</html>
