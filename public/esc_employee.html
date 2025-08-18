@@ -13,13 +13,13 @@
   </header>
 
   <main>
-    <!-- 1. Minha Escala -->
     <section class="portal-section">
       <h2>Minha Escala Mensal</h2>
       <div class="escala-controls">
         <button id="prev-month">←</button>
         <span id="mes-ano"></span>
         <button id="next-month">→</button>
+        <button id="request-off-btn" class="small-btn" style="margin-left:8px;">Solicitar Folga</button>
       </div>
       <div id="calendar-header" class="calendar-row">
         <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div>
@@ -28,10 +28,9 @@
       <div id="calendar" class="calendar-grid"></div>
     </section>
 
-    <!-- 2. Solicitar Troca de Folga -->
     <section class="portal-section">
       <h2>Solicitar Troca de Folga</h2>
-      <label>Dia: 
+      <label>Dia:
         <select id="swap-day"></select>
       </label>
       <label>Com colega:
@@ -41,7 +40,17 @@
       <ul id="swap-list" class="swap-list"></ul>
     </section>
 
-    <!-- 3. Chat Interno -->
+    <section class="portal-section">
+      <h2>Minha Conta</h2>
+      <p id="me-info"></p>
+      <form id="change-pass-form">
+        <input type="password" id="old-pass" placeholder="Senha atual" />
+        <input type="password" id="new-pass" placeholder="Nova senha" />
+        <input type="password" id="new-pass2" placeholder="Repita nova senha" />
+        <button type="submit">Alterar Senha</button>
+      </form>
+    </section>
+
     <section class="portal-section">
       <h2>Chat Interno</h2>
       <div id="chat-window" class="chat-window"></div>
@@ -52,6 +61,7 @@
     </section>
   </main>
 
+  <script src="js/app.js"></script>
   <script src="js/pages/esc_employee.js"></script>
 </body>
 </html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EscalaFácil - Relatórios</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Relatórios</h1>
+    <a class="btn-back" href="dashboard.html">← Voltar</a>
+  </header>
+
+  <main class="container">
+    <section class="portal-section">
+      <h2>Exportar Dados</h2>
+      <p>Escolha o que deseja exportar:</p>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <button id="export-all-scales" class="small-btn">Exportar todas as escalas (CSV)</button>
+        <button id="export-chat" class="small-btn">Exportar chat (CSV)</button>
+        <button id="export-swaps" class="small-btn">Exportar solicitações (CSV)</button>
+      </div>
+      <div id="report-msg" style="margin-top:.8rem;color:#333"></div>
+    </section>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script src="js/pages/report.js"></script>
+</body>
+</html>

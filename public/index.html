@@ -1,28 +1,45 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>EscalaFácil - Login Gerente</title>
   <link rel="stylesheet" href="css/style.css" />
-
-    <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#4a90e2">
+  <meta name="theme-color" content="#4a90e2" />
 </head>
 <body>
   <div class="container center">
-    <h1>EscalaFácil</h1>
+    <h1>EscalaFácil — Login Gerente</h1>
     <form id="login-form">
-      <input type="text" id="username" placeholder="Nome do gerente" required />
+      <input type="text" id="username" placeholder="Usuário" required />
+      <input type="password" id="password" placeholder="Senha" required />
       <button type="submit">Entrar</button>
     </form>
+    <p style="margin-top:.8rem;font-size:.9rem;color:#666">
+      Para testes: usuário <code>adm</code> / senha <code>105252</code>
+    </p>
+    <p style="margin-top:.6rem;font-size:.9rem;color:#666">
+      Se for funcionário, use a página <a href="employee.html">Portal do Funcionário</a>.
+    </p>
   </div>
-  <script src="js/app.js"></script>
+
   <script>
+    // login simples cliente-side (apenas para conveniência local)
     document.getElementById('login-form').addEventListener('submit', e => {
       e.preventDefault();
-      localStorage.setItem('gerente', document.getElementById('username').value.trim());
-      window.location.href = 'dashboard.html';
+      const user = document.getElementById('username').value.trim();
+      const pass = document.getElementById('password').value.trim();
+
+      // credenciais fixas conforme solicitado
+      if (user === 'adm' && pass === '105252') {
+        // salva o gerente e marca como autenticado
+        localStorage.setItem('gerente', user);
+        // opcional: flag para sessão
+        sessionStorage.setItem('gerente_session', user);
+        window.location.href = 'dashboard.html';
+      } else {
+        alert('Usuário ou senha incorretos.');
+      }
     });
   </script>
 </body>

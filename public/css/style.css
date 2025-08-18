@@ -1,362 +1,73 @@
-/* Reset & Básico */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-html, body {
-  font-family: Arial, sans-serif;
-  height: 100%;
-  background: #f9f9f9;
-}
-
-/* Containers Centrais */
-.container,
-main.center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
+:root{
+  --bg: #f9f9f9;
+  --card: #fff;
+  --primary: #4a90e2;
+  --primary-dark: #357ab8;
+  --muted: #f0f0f0;
+  --success: #2ecc71;
+  --danger: #ffb3b3;
+  --gap: 0.5rem;
+  --radius: 6px;
+  --maxw: 900px;
+  --pad: 1rem;
 }
 
-/* Header & Navegação */
-header {
-  background: #4a90e2;
-  color: #fff;
-  padding: 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-header h1 {
-  font-size: 1.5rem;
-}
-.menu {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  background: #f0f0f0;
-  padding: 0.5rem;
-}
-.menu a {
-  color: #333;
-  text-decoration: none;
-  font-weight: bold;
-}
-.btn-back {
-  color: #4a90e2;
-  text-decoration: none;
-  font-size: 0.9rem;
-}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#222}
+.container,main.center{display:flex;flex-direction:column;gap:var(--gap);align-items:center;padding:var(--pad);max-width:var(--maxw);margin-inline:auto}
 
-/* Formulários */
-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-form input {
-  flex: 1 1 150px;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-form button {
-  padding: 0.5rem 1rem;
-  border: none;
-  background: #4a90e2;
-  color: #fff;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-form button:hover {
-  background: #357ab8;
-}
+/* Header */
+header{width:100%;background:var(--primary);color:#fff;padding:.75rem 1rem;border-radius:0 0 var(--radius) var(--radius);display:flex;align-items:center;justify-content:space-between}
+header h1{font-size:1.15rem}
+#logout-btn{background:transparent;border:0;color:#fff;cursor:pointer;font-weight:600}
 
-/* Listas de Itens */
-.list-section ul,
-#historico ul {
-  list-style: none;
-  width: 100%;
-  max-width: 500px;
-  margin-top: 1rem;
-}
-.list-section li,
-#lista-historico li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #fff;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  margin-bottom: 0.5rem;
-}
-.list-section button {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 1rem;
-}
+/* Sections */
+.portal-section{width:100%;background:var(--card);padding:1rem;border-radius:var(--radius);box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.portal-section + .portal-section{margin-top:.75rem}
 
-/* Calendário */
-.calendar-row {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  text-align: center;
-  background: #f5f5f5;
-  color: #555;
-  font-weight: bold;
-  padding: 0.5rem 0;
-}
+/* Controls / Buttons (reutilizáveis) */
+button, .btn {cursor:pointer;border:0;padding:.45rem .75rem;border-radius:6px;background:var(--primary);color:#fff;font-weight:600}
+button:hover, .btn:hover{background:var(--primary-dark)}
+.small-btn{padding:.25rem .5rem;font-size:.9rem}
 
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-}
+/* Grid calendário */
+.calendar-row{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;background:var(--muted);padding:.4rem;border-radius:4px;font-weight:700;color:#555}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:.5rem}
+.calendar-grid .day{background:var(--card);min-height:78px;padding:.5rem;border:1px solid #e6e6e6;border-radius:6px;position:relative;display:flex;flex-direction:column;gap:.35rem;overflow:hidden;transition:transform .12s,box-shadow .12s}
+.calendar-grid .day:hover{transform:translateY(-4px);box-shadow:0 6px 18px rgba(0,0,0,.04)}
+.calendar-grid .day header{font-weight:700;font-size:.95rem}
 
-.calendar-grid .day {
-  background: #fff;
-  min-height: 80px;
-  padding: 0.5rem;
-  position: relative;
-  cursor: pointer;
-  border: 1px solid #e0e0e0;
-  transition: background 0.2s, transform 0.1s;
-}
-.calendar-grid .day:hover {
-  background: #e8f4fd;
-  transform: translateY(-2px);
-}
+/* nomes dentro do dia */
+.assigned-list{display:flex;flex-direction:column;gap:4px;font-size:.82rem;margin-top:auto}
+.assigned-name{padding:4px 6px;border-radius:6px;background:rgba(0,0,0,.04);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.assigned-me{background:rgba(46,204,113,.12);border:1px solid rgba(46,204,113,.22);font-weight:700}
+.assigned-other{opacity:.95}
 
-/* Feriados */
-.calendar-grid .day.holiday {
-  background: #ffecec;
-  border-color: #ffb3b3;
-}
-.calendar-grid .day.holiday:hover {
-  background: #ffdede;
-}
+/* estados */
+.my-day{box-shadow:0 0 0 3px rgba(46,204,113,.08)}
+.holiday{background:#fff5f5;border-color:var(--danger)}
+.no-assignment{color:#9aa;display:flex;align-items:center;justify-content:center;height:100%}
 
-/* Número do dia */
-.calendar-grid .day header {
-  font-weight: bold;
-  margin-bottom: 0.4rem;
-  font-size: 0.9rem;
-}
-
-/* Nome atribuído */
-.calendar-grid .day .assign {
-  position: absolute;
-  bottom: 0.4rem;
-  left: 0.3rem;
-  right: 0.3rem;
-  font-size: 0.8rem;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-/* Controles de Escala */
-.escala-controls,
-.escala-actions {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin: 1rem 0;
-}
-.escala-controls button,
-.escala-actions button {
-  padding: 0.5rem 1rem;
-  border: none;
-  background: #4a90e2;
-  color: #fff;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.escala-controls button:hover,
-.escala-actions button:hover {
-  background: #357ab8;
-}
-
-/* Seções ocultáveis */
-.hidden {
-  display: none;
-}
-
-/* Responsividade */
-@media (min-width: 600px) {
-  .container,
-  main.center {
-    max-width: 600px;
-    margin: auto;
-  }
-  .calendar-grid .day {
-    min-height: 100px;
-    padding: 1rem;
-  }
-}
-
-/* Modal de Atribuição */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-}
-.modal.hidden {
-  display: none;
-}
-.modal-content {
-  background: #fff;
-  padding: 1.5rem;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 320px;
-  text-align: center;
-}
-.modal-content h3 {
-  margin-bottom: 1rem;
-}
-#func-select {
-  width: 100%;
-  padding: 0.5rem;
-  margin-bottom: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-.modal-buttons {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-.modal-buttons button {
-  flex: 1;
-  padding: 0.5rem;
-  border: none;
-  background: #4a90e2;
-  color: #fff;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.modal-buttons button:hover {
-  background: #357ab8;
-}
-
-/* Checkbox-list no modal (full width e scroll) */
-.checkbox-list {
-  max-height: 200px;
-  overflow-y: auto;
-  text-align: left;
-  margin-bottom: 1rem;
-}
-.checkbox-list label {
-  display: flex;
-  align-items: center;
-  padding: 0.3rem 0;
-}
-.checkbox-list input[type="checkbox"] {
-  margin-right: 0.5rem;
-}
-
-/* Certifique-se de que o modal fica confortável no mobile */
-.modal-content {
-  width: 90%;
-  max-width: 360px;
-}
-@media (max-width: 400px) {
-  .modal-content {
-    padding: 1rem;
-  }
-  .checkbox-list {
-    max-height: 150px;
-  }
-}
-
-
-/* destaque no calendário do funcionário */
-.my-day {
-  background: #d4edda;
-  border-color: #a8dda0;
-}
-.other-day {
-  background: #f0f0f0;
-}
-
-/* ajuste botão logout */
-#logout-btn {
-  background: transparent;
-  border: none;
-  color: #4a90e2;
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-
-
-/* Portal Funcionário */
-.portal-section {
-  margin: 1.5rem auto;
-  max-width: 600px;
-  padding: 1rem;
-  background: #fff;
-  border-radius: 6px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-.chat-window {
-  height: 200px;
-  overflow-y: auto;
-  border: 1px solid #ddd;
-  padding: 0.5rem;
-  margin-bottom: 0.5rem;
-  background: #f9f9f9;
-}
-.chat-me { text-align: right; }
-.chat-other { text-align: left; }
-.chat-user { font-weight: bold; margin-right: 0.3rem; }
-.chat-text { }
+/* Chat */
+.chat-window{height:200px;overflow:auto;border:1px solid #e6e6e6;padding:.5rem;background:var(--bg);border-radius:6px}
+.chat-me{text-align:right;margin:.25rem 0}
+.chat-other{text-align:left;margin:.25rem 0}
+.chat-user{font-weight:700;margin-right:.3rem}
 
 /* Swap list */
-.swap-list {
-  list-style: none;
-  margin-top: 0.5rem;
-  padding-left: 0;
+.swap-list{list-style:none;padding:0;margin-top:.5rem;display:flex;flex-direction:column;gap:.4rem}
+.swap-list li{background:#fbfbfb;border:1px solid #eee;padding:.45rem;border-radius:6px;font-size:.95rem}
+
+/* Modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:1rem;z-index:60}
+.modal-content{width:100%;max-width:380px;background:var(--card);padding:1rem;border-radius:8px}
+.checkbox-list{max-height:200px;overflow:auto;padding-right:6px}
+
+/* responsividade (desktop maior) */
+@media(min-width:900px){
+  .calendar-grid .day{min-height:110px;padding:1rem}
+  .chat-window{height:260px}
 }
-.swap-list li {
-  background: #fafafa;
-  padding: 0.4rem;
-  margin-bottom: 0.3rem;
-  border: 1px solid #ddd;
-  borde
-  
-  .swap-notif {
-  background: #fff3cd;
-  border: 1px solid #ffeeba;
-  padding: 0.75rem;
-  border-radius: 4px;
-  margin: 1rem 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.swap-notif button {
-  padding: 0.3rem 0.6rem;
-  border: none;
-  background: #856404;
-  color: #fff;
-  border-radius: 4px;
-  cursor: pointer;
-}
-r-radius: 4px;
-}
+
+/* utilitários */
+.hidden{display:none}

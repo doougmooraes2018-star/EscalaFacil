@@ -1,17 +1,27 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>EscalaFácil - Disponibilidade</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EscalaFácil - Disponibilidade / Solicitar Folga</title>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <header><h1>Configurar Disponibilidade</h1><a class="btn-back" href="dashboard.html">← Voltar</a></header>
-  <main>
-    <p>Selecione dias em que <strong>não</strong> está disponível:</p>
+  <header>
+    <h1>Disponibilidade</h1>
+    <a class="btn-back" href="dashboard.html">← Voltar</a>
+  </header>
+
+  <main class="container">
+    <p>Solicitar folga para o mês seguinte</p>
+    <div style="display:flex;align-items:center;gap:.5rem;margin:.5rem 0;">
+      <span id="avail-month-label"></span>
+      <button id="request-off-availability" class="small-btn">Solicitar Folga</button>
+    </div>
     <div id="avail-calendar" class="calendar-grid"></div>
-    <button id="save-avail">Salvar Disponibilidade</button>
   </main>
+
+  <script src="js/app.js"></script>
   <script src="js/pages/availability.js"></script>
 </body>
 </html>
