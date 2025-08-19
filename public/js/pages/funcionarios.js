@@ -1,8 +1,8 @@
-// docs/js/pages/funcionarios.js
+// admin: criar/listar/editar funcionários
 const form = document.getElementById('form-funcionario');
 const lista = document.getElementById('lista-funcionarios');
-let token = sessionStorage.getItem('token');
-if (!token) { alert('Login admin necessário.'); window.location.href='index.html'; }
+
+if (!sessionStorage.getItem('token')) { alert('Login admin necessário'); location.href = '/'; }
 
 async function loadList(){
   try {
@@ -12,7 +12,6 @@ async function loadList(){
     render(funcs);
     localStorage.setItem('funcionarios', JSON.stringify(funcs));
   } catch (err) {
-    // fallback to localStorage
     const funcs = JSON.parse(localStorage.getItem('funcionarios') || '[]');
     render(funcs);
   }
@@ -20,26 +19,23 @@ async function loadList(){
 
 function render(funcs){
   lista.innerHTML = '';
-  funcs.forEach((f,i)=>{
+  funcs.forEach((f) => {
     const li = document.createElement('li');
     li.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center">
       <div>${f.nome} | ${f.telefone || ''} | ${f.setor || ''} | ${f.funcao || ''}</div>
       <div>
         <button class="btn-edit" data-id="${f.id}">✏️</button>
-        <button class="btn-del" data-id="${f.id}">🗑️</button>
       </div>
     </div>`;
     lista.appendChild(li);
   });
-  // attach events
   Array.from(document.querySelectorAll('.btn-edit')).forEach(b=>{
-    b.addEventListener('click', async e=>{
+    b.addEventListener('click', async () => {
       const id = b.dataset.id;
-      // load single user (we can fetch list again and find)
       const r = await apiFetch('/api/users');
       if (!r.ok) return alert('erro');
       const funcs = await r.json();
-      const u = funcs.find(x=>String(x.id) === String(id));
+      const u = funcs.find(x => String(x.id) === String(id));
       if (!u) return alert('usuario nao encontrado');
       form.idx.value = u.id;
       form.nome.value = u.nome;
@@ -48,20 +44,9 @@ function render(funcs){
       form.funcao.value = u.funcao || '';
     });
   });
-  Array.from(document.querySelectorAll('.btn-del')).forEach(b=>{
-    b.addEventListener('click', async ()=> {
-      if (!confirm('Remover funcionario?')) return;
-      const id = b.dataset.id;
-      try {
-        // backend doesn't have delete in our API; we will simulate by updating role=deleted if needed.
-        // For now we remove from local view and ask admin to implement delete if desired.
-        alert('Remoção via API não implementada; edite manualmente no banco ou implemente endpoint DELETE /api/users/:id.');
-      } catch (err) { alert('Erro ao deletar'); }
-    });
-  });
 }
 
-form.addEventListener('submit', async e=>{
+form.addEventListener('submit', async e => {
   e.preventDefault();
   const idx = form.idx.value;
   const payload = {
@@ -75,14 +60,14 @@ form.addEventListener('submit', async e=>{
     if (!payload.nome) return alert('Nome requerido');
     if (!idx) {
       const r = await apiFetch('/api/users', { method: 'POST', body: JSON.stringify(payload) });
-      if (!r.ok) { const j = await r.json(); return alert(j.error||'Erro criar'); }
+      if (!r.ok) { const j = await r.json(); return alert(j.error || 'Erro criar'); }
       alert('Funcionário criado');
     } else {
       const r = await apiFetch(`/api/users/${idx}`, { method: 'PUT', body: JSON.stringify(payload) });
-      if (!r.ok) { const j = await r.json(); return alert(j.error||'Erro atualizar'); }
+      if (!r.ok) { const j = await r.json(); return alert(j.error || 'Erro atualizar'); }
       alert('Atualizado');
     }
-    form.reset(); form.idx.value='';
+    form.reset(); form.idx.value = '';
     loadList();
   } catch (err) { console.error(err); alert('Erro de rede'); }
 });

@@ -1,30 +1,29 @@
-// server.js (MySQL) - cria tabelas automaticamente e expõe API REST
+// server.js - backend + serves frontend from /public
 const express = require('express');
-const cors = require('cors');
 const helmet = require('helmet');
+const morgan = require('morgan');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const mysql = require('mysql2/promise');
+const path = require('path');
+
+require('dotenv').config(); // optional: if you create .env locally
 
 const app = express();
 app.use(helmet());
 app.use(express.json());
+app.use(morgan('tiny'));
 
-// Config from env
-const DATABASE_URL = process.env.DATABASE_URL || process.env.MYSQL_URL || ''; // ex: mysql://user:pass@host:port/db
+const DATABASE_URL = process.env.DATABASE_URL || '';
 const JWT_SECRET = process.env.JWT_SECRET || 'change_this_jwt_secret';
-const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || '*'; // set e.g. https://douglasmoraesdev.github.io
-
-app.use(cors({ origin: FRONTEND_ORIGIN }));
+const PORT = process.env.PORT || 3000;
 
 if (!DATABASE_URL) {
-  console.error('DATABASE_URL not set - set env var to MySQL connection string');
+  console.error('DATABASE_URL not set. Please set environment variable.');
   process.exit(1);
 }
 
-// parse mysql URL
 function parseMysqlUrl(url) {
-  // url like mysql://user:pass@host:port/db
   try {
     const u = new URL(url);
     return {
@@ -32,9 +31,9 @@ function parseMysqlUrl(url) {
       port: u.port || 3306,
       user: u.username,
       password: u.password,
-      database: u.pathname.replace(/^\//,'')
+      database: u.pathname.replace(/^\//, '')
     };
-  } catch(err) {
+  } catch (err) {
     throw new Error('Invalid DATABASE_URL: ' + err.message);
   }
 }
@@ -51,43 +50,40 @@ async function getPool() {
       password: cfg.password,
       database: cfg.database,
       waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0,
-      // dateStrings: true
+      connectionLimit: 10
     });
   }
   return pool;
 }
 
-// --- DB init: create tables if not exists ---
+// Initialize DB (create tables) on startup
 async function initDb() {
   const p = await getPool();
-  // users
+
   await p.execute(`
     CREATE TABLE IF NOT EXISTS users (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      nome TEXT NOT NULL,
+      nome VARCHAR(255) NOT NULL,
       telefone VARCHAR(80),
       setor VARCHAR(120),
       funcao VARCHAR(120),
       senha VARCHAR(255),
-      role VARCHAR(20) DEFAULT 'employee'
+      role VARCHAR(20) DEFAULT 'employee',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
-  // escala_months
   await p.execute(`
     CREATE TABLE IF NOT EXISTS escala_months (
       month VARCHAR(7) PRIMARY KEY,
-      data JSON DEFAULT (JSON_OBJECT())
+      data JSON
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
-  // swaps
   await p.execute(`
     CREATE TABLE IF NOT EXISTS swaps (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      type VARCHAR(10) NOT NULL,
+      type VARCHAR(20) NOT NULL,
       requester VARCHAR(255),
       \`from\` VARCHAR(255),
       \`to\` VARCHAR(255),
@@ -98,7 +94,6 @@ async function initDb() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
-  // chat
   await p.execute(`
     CREATE TABLE IF NOT EXISTS chat (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -108,11 +103,10 @@ async function initDb() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
-  // insert admin if missing (senha: 105252)
-  const [rows] = await p.execute(`SELECT id FROM users WHERE role='admin' LIMIT 1`);
-  if (rows.length === 0) {
-    const pass = '105252';
-    const hash = await bcrypt.hash(pass, 10);
+  // ensure admin exists (adm / 105252)
+  const [rows] = await p.execute(`SELECT id FROM users WHERE role = 'admin' LIMIT 1`);
+  if (!rows || rows.length === 0) {
+    const hash = await bcrypt.hash('105252', 10);
     await p.execute(
       `INSERT INTO users (nome, telefone, setor, funcao, senha, role) VALUES (?, ?, ?, ?, ?, ?)`,
       ['adm', '', 'gerencia', 'Administrador', hash, 'admin']
@@ -122,65 +116,66 @@ async function initDb() {
 }
 
 initDb().catch(err => {
-  console.error('DB init failed', err);
+  console.error('DB init error', err);
   process.exit(1);
 });
 
-// --- Helpers JWT/Auth ---
+// --- auth & helpers ---
 function signToken(payload) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '12h' });
 }
 
-async function verifyTokenMiddleware(req,res,next) {
-  const header = req.headers.authorization;
-  if (!header) return res.status(401).json({ error: 'No auth header' });
-  const token = header.split(' ')[1];
+async function verifyToken(req, res, next) {
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ error: 'no auth header' });
+  const token = auth.split(' ')[1];
   try {
     const payload = jwt.verify(token, JWT_SECRET);
     req.user = payload;
-    return next();
+    next();
   } catch (err) {
-    return res.status(401).json({ error: 'Invalid token' });
+    return res.status(401).json({ error: 'invalid token' });
   }
 }
 
-function adminOnly(req,res,next){
+function adminOnly(req, res, next) {
   if (req.user && req.user.role === 'admin') return next();
   return res.status(403).json({ error: 'admin only' });
 }
 
-// --- Routes ---
+// --- API routes ---
 
 // health
-app.get('/', (req,res)=> res.json({ ok: true, env: process.env.NODE_ENV || 'dev' }));
+app.get('/api/health', (req, res) => res.json({ ok: true }));
 
-// auth: login
-app.post('/api/auth/login', async (req,res)=>{
+// auth/login
+app.post('/api/auth/login', async (req, res) => {
   const { username, password, telefone } = req.body;
   try {
     const p = await getPool();
-    // admin login (username === 'adm')
-    if (username === 'adm') {
-      const [rows] = await p.execute(`SELECT * FROM users WHERE role = 'admin' LIMIT 1`);
+    // admin quick login by username 'adm'
+    if (username === 'adm' && password) {
+      const [rows] = await p.execute(`SELECT * FROM users WHERE role='admin' LIMIT 1`);
       const admin = rows[0];
       if (!admin) return res.status(401).json({ error: 'admin missing' });
-      const ok = await bcrypt.compare(password || '', admin.senha || '');
+      const ok = await bcrypt.compare(password, admin.senha || '');
       if (!ok) return res.status(401).json({ error: 'invalid credentials' });
       const token = signToken({ id: admin.id, nome: admin.nome, role: 'admin' });
-      return res.json({ token, user: { id: admin.id, nome: admin.nome, role: 'admin' } });
+      return res.json({ token, user: { id: admin.id, nome: admin.nome, role: admin.role }});
     }
-    // employee by nome + telefone
+
     if (telefone) {
       const [rows] = await p.execute(`SELECT * FROM users WHERE nome = ? AND telefone = ? LIMIT 1`, [username, telefone]);
+      if (!rows || !rows[0]) return res.status(401).json({ error: 'not found' });
       const u = rows[0];
-      if (!u) return res.status(401).json({ error: 'not found' });
       const token = signToken({ id: u.id, nome: u.nome, role: u.role });
       return res.json({ token, user: { id: u.id, nome: u.nome, role: u.role }});
     }
-    // else nome + senha
+
+    // name+password
     const [rows] = await p.execute(`SELECT * FROM users WHERE nome = ? LIMIT 1`, [username]);
+    if (!rows || !rows[0]) return res.status(401).json({ error: 'not found' });
     const u = rows[0];
-    if (!u) return res.status(401).json({ error: 'not found' });
     if (!u.senha) return res.status(401).json({ error: 'no password set; use telefone' });
     const ok = await bcrypt.compare(password || '', u.senha);
     if (!ok) return res.status(401).json({ error: 'invalid credentials' });
@@ -193,62 +188,80 @@ app.post('/api/auth/login', async (req,res)=>{
 });
 
 // users (admin)
-app.get('/api/users', verifyTokenMiddleware, adminOnly, async (req,res)=>{
+app.get('/api/users', verifyToken, adminOnly, async (req, res) => {
   const p = await getPool();
   const [rows] = await p.execute(`SELECT id,nome,telefone,setor,funcao,role FROM users ORDER BY nome`);
   res.json(rows);
 });
 
-app.post('/api/users', verifyTokenMiddleware, adminOnly, async (req,res)=>{
+app.post('/api/users', verifyToken, adminOnly, async (req, res) => {
   const { nome, telefone, setor, funcao, senha, role } = req.body;
   const p = await getPool();
   const hash = senha ? await bcrypt.hash(senha, 10) : null;
   await p.execute(`INSERT INTO users (nome,telefone,setor,funcao,senha,role) VALUES (?, ?, ?, ?, ?, ?)`,
-    [nome, telefone, setor, funcao, hash, role || 'employee']);
+    [nome, telefone || '', setor || '', funcao || '', hash, role || 'employee']);
   res.json({ ok: true });
 });
 
-app.put('/api/users/:id', verifyTokenMiddleware, adminOnly, async (req,res)=>{
+app.put('/api/users/:id', verifyToken, adminOnly, async (req, res) => {
   const id = Number(req.params.id);
   const { nome, telefone, setor, funcao, senha, role } = req.body;
   const p = await getPool();
   if (senha) {
     const hash = await bcrypt.hash(senha, 10);
     await p.execute(`UPDATE users SET nome=?,telefone=?,setor=?,funcao=?,senha=?,role=? WHERE id = ?`,
-      [nome,telefone,setor,funcao,hash,role,id]);
+      [nome, telefone || '', setor || '', funcao || '', hash, role || 'employee', id]);
   } else {
     await p.execute(`UPDATE users SET nome=?,telefone=?,setor=?,funcao=?,role=? WHERE id = ?`,
-      [nome,telefone,setor,funcao,role,id]);
+      [nome, telefone || '', setor || '', funcao || '', role || 'employee', id]);
   }
   res.json({ ok: true });
 });
 
-// escala read (any authenticated), write (admin)
-app.get('/api/escala/:month', verifyTokenMiddleware, async (req,res)=>{
-  const month = req.params.month; // YYYY-MM
+// self change password
+app.put('/api/users/:id/self', verifyToken, async (req, res) => {
+  const id = Number(req.params.id);
+  if (req.user.id !== id && req.user.role !== 'admin') return res.status(403).json({ error: 'forbidden' });
+  const { oldPassword, newPassword } = req.body;
+  const p = await getPool();
+  const [rows] = await p.execute(`SELECT * FROM users WHERE id = ? LIMIT 1`, [id]);
+  const u = rows[0];
+  if (!u) return res.status(404).json({ error: 'not found' });
+  if (req.user.role !== 'admin') {
+    const ok = await bcrypt.compare(oldPassword || '', u.senha || '');
+    if (!ok) return res.status(400).json({ error: 'invalid current password' });
+  }
+  const hash = await bcrypt.hash(newPassword, 10);
+  await p.execute(`UPDATE users SET senha = ? WHERE id = ?`, [hash, id]);
+  res.json({ ok: true });
+});
+
+// escala read/write
+app.get('/api/escala/:month', verifyToken, async (req, res) => {
+  const month = req.params.month;
   const p = await getPool();
   const [rows] = await p.execute(`SELECT data FROM escala_months WHERE month = ? LIMIT 1`, [month]);
-  if (!rows.length) return res.json({});
+  if (!rows || rows.length === 0) return res.json({});
   res.json(rows[0].data || {});
 });
 
-app.put('/api/escala/:month', verifyTokenMiddleware, adminOnly, async (req,res)=>{
+app.put('/api/escala/:month', verifyToken, adminOnly, async (req, res) => {
   const month = req.params.month;
   const data = req.body || {};
   const p = await getPool();
-  await p.execute(`INSERT INTO escala_months (month, data) VALUES (?, ?) 
-    ON DUPLICATE KEY UPDATE data = VALUES(data)`, [month, JSON.stringify(data)]);
+  await p.execute(`INSERT INTO escala_months (month, data) VALUES (?, ?) ON DUPLICATE KEY UPDATE data = VALUES(data)`,
+    [month, JSON.stringify(data)]);
   res.json({ ok: true });
 });
 
 // swaps
-app.get('/api/swaps', verifyTokenMiddleware, adminOnly, async (req,res)=>{
+app.get('/api/swaps', verifyToken, adminOnly, async (req, res) => {
   const p = await getPool();
   const [rows] = await p.execute(`SELECT * FROM swaps ORDER BY ts DESC`);
   res.json(rows);
 });
 
-app.post('/api/swaps', verifyTokenMiddleware, async (req,res)=>{
+app.post('/api/swaps', verifyToken, async (req, res) => {
   const { type, requester, from, to, day, month } = req.body;
   const p = await getPool();
   const [result] = await p.execute(
@@ -260,17 +273,15 @@ app.post('/api/swaps', verifyTokenMiddleware, async (req,res)=>{
   res.json(rows[0]);
 });
 
-// approve
-app.post('/api/swaps/:id/approve', verifyTokenMiddleware, adminOnly, async (req,res)=>{
+app.post('/api/swaps/:id/approve', verifyToken, adminOnly, async (req, res) => {
   const id = Number(req.params.id);
   const p = await getPool();
   const [r0] = await p.execute(`SELECT * FROM swaps WHERE id = ? LIMIT 1`, [id]);
-  if (!r0.length) return res.status(404).json({ error: 'notfound' });
+  if (!r0 || !r0.length) return res.status(404).json({ error: 'notfound' });
   const s = r0[0];
-  // load escala
   const [rEsc] = await p.execute(`SELECT data FROM escala_months WHERE month = ? LIMIT 1`, [s.month]);
   let data = {};
-  if (rEsc.length) data = rEsc[0].data || {};
+  if (rEsc && rEsc.length) data = rEsc[0].data || {};
   if (s.type === 'off') {
     data[s.day] = data[s.day] || [];
     if (!data[s.day].includes(s.requester)) data[s.day].push(s.requester);
@@ -284,8 +295,7 @@ app.post('/api/swaps/:id/approve', verifyTokenMiddleware, adminOnly, async (req,
   res.json({ ok: true });
 });
 
-// reject
-app.post('/api/swaps/:id/reject', verifyTokenMiddleware, adminOnly, async (req,res)=>{
+app.post('/api/swaps/:id/reject', verifyToken, adminOnly, async (req, res) => {
   const id = Number(req.params.id);
   const p = await getPool();
   await p.execute(`UPDATE swaps SET status = ? WHERE id = ?`, ['rejeitado', id]);
@@ -293,21 +303,21 @@ app.post('/api/swaps/:id/reject', verifyTokenMiddleware, adminOnly, async (req,r
 });
 
 // chat
-app.get('/api/chat', verifyTokenMiddleware, async (req,res)=>{
+app.get('/api/chat', verifyToken, async (req, res) => {
   const p = await getPool();
   const [rows] = await p.execute(`SELECT * FROM chat ORDER BY ts ASC`);
   res.json(rows);
 });
 
-app.post('/api/chat', verifyTokenMiddleware, async (req,res)=>{
+app.post('/api/chat', verifyToken, async (req, res) => {
   const { content } = req.body;
   const p = await getPool();
   await p.execute(`INSERT INTO chat (\`user\`, content) VALUES (?, ?)`, [req.user.nome, content]);
   res.json({ ok: true });
 });
 
-// reports (csv)
-app.get('/api/reports/escala_csv', verifyTokenMiddleware, adminOnly, async (req,res)=>{
+// reports
+app.get('/api/reports/escala_csv', verifyToken, adminOnly, async (req, res) => {
   const p = await getPool();
   const [rows] = await p.execute(`SELECT month, data FROM escala_months ORDER BY month DESC`);
   let out = 'month,day,employees\n';
@@ -320,7 +330,7 @@ app.get('/api/reports/escala_csv', verifyTokenMiddleware, adminOnly, async (req,
   res.header('Content-Type','text/csv').send(out);
 });
 
-app.get('/api/reports/chat_csv', verifyTokenMiddleware, adminOnly, async (req,res)=>{
+app.get('/api/reports/chat_csv', verifyToken, adminOnly, async (req, res) => {
   const p = await getPool();
   const [rows] = await p.execute(`SELECT ts, \`user\`, content FROM chat ORDER BY ts ASC`);
   let out = 'ts,user,text\n';
@@ -330,7 +340,12 @@ app.get('/api/reports/chat_csv', verifyTokenMiddleware, adminOnly, async (req,re
   res.header('Content-Type','text/csv').send(out);
 });
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log('Server running on port', port);
+// serve static frontend (public)
+app.use(express.static(path.join(__dirname, 'public')));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
 });

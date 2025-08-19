@@ -1,4 +1,4 @@
-// esc_employee.js (frontend) - usa API
+// portal do funcionário: ver escala, chat, solicitar folga e swap
 const calendarEl = document.getElementById('calendar');
 const mesAnoEl = document.getElementById('mes-ano');
 const prevBtn = document.getElementById('prev-month');
@@ -36,16 +36,13 @@ async function fetchEscalaFor(m,y){
 }
 
 async function loadFuncionarios(){
-  // admin-only endpoint; for colleagues list we can fetch from /api/users only if admin
-  // workaround: maintain list in localStorage when admin manages, otherwise request public endpoint (not implemented)
-  // fallback: load from localStorage for now
+  // use local copy (admin updates will mirror)
   return JSON.parse(localStorage.getItem('funcionarios') || '[]');
 }
 
 async function genCalendar(m,y){
   mesAnoEl.textContent = `${String(m+1).padStart(2,'0')}/${y}`;
   calendarEl.innerHTML = '';
-  const key = `${y}-${String(m+1).padStart(2,'0')}`;
   const monthData = await fetchEscalaFor(m,y);
   const firstDow = new Date(y,m,1).getDay();
   const daysCount = new Date(y,m+1,0).getDate();
@@ -55,20 +52,16 @@ async function genCalendar(m,y){
     cell.className='day';
     const h = document.createElement('header'); h.textContent = d; cell.appendChild(h);
     const assigned = monthData[String(d)] || [];
-    const list = document.createElement('div'); list.className = 'assigned-list';
+    const list = document.createElement('div'); list.className = 'assign';
     if (assigned.length===0) {
-      const none = document.createElement('div'); none.textContent='—'; list.appendChild(none); cell.classList.add('no-assignment');
+      list.textContent='—';
+      cell.classList.add('no-assignment');
     } else {
-      assigned.forEach(n => {
-        const item = document.createElement('div');
-        item.textContent = n;
-        if (n === myName) { item.classList.add('assigned-me'); cell.classList.add('my-day'); }
-        list.appendChild(item);
-      });
+      list.textContent = assigned.join(', ');
+      if (assigned.includes(myName)) cell.classList.add('my-day');
     }
     cell.appendChild(list);
     cell.addEventListener('click', () => {
-      // select day for request off
       const prev = calendarEl.querySelector('.day.selected-off');
       if (prev) prev.classList.remove('selected-off');
       cell.classList.add('selected-off');
@@ -80,12 +73,12 @@ async function genCalendar(m,y){
 
 async function populateSwapControls() {
   swapDaySel.innerHTML = '<option value="">-- selecione --</option>';
-  const key = `${ano}-${String(mes+1).padStart(2,'0')}`;
   const month = await fetchEscalaFor(mes,ano);
-  const arrDays = Object.keys(month).map(k=>Number(k)).sort((a,b)=>a-b);
-  arrDays.forEach(d=>{
-    const assigned = month[String(d)] || [];
-    if (assigned.includes(myName)) swapDaySel.insertAdjacentHTML('beforeend', `<option value="${d}">${d}/${mes+1}/${ano}</option>`);
+  Object.keys(month).map(k => Number(k)).sort((a,b)=>a-b).forEach(d => {
+    const arr = month[String(d)] || [];
+    if (arr.includes(myName)) {
+      swapDaySel.insertAdjacentHTML('beforeend', `<option value="${d}">${d}/${mes+1}/${ano}</option>`);
+    }
   });
   swapWithSel.innerHTML = '<option value="">-- selecione colega --</option>';
   const funcs = await loadFuncionarios();
@@ -93,13 +86,11 @@ async function populateSwapControls() {
 }
 
 async function renderSwaps() {
-  // show my requests (client-side)
-  const res = await apiFetch('/api/swaps'); // need admin; if 403, fallback to local
+  const res = await apiFetch('/api/swaps');
   if (res.ok) {
     const items = await res.json();
     swapList.innerHTML = items.filter(s => s.requester === myName).map(s => `<li>${s.type} dia ${s.day}/${s.month} — <strong>${s.status}</strong></li>`).join('');
   } else {
-    // fallback to localStorage queue
     const swaps = JSON.parse(localStorage.getItem('swap_requests') || '[]');
     swapList.innerHTML = swaps.filter(s => s.requester === myName).map(s => `<li>${s.type} dia ${s.day}/${s.month} — <strong>${s.status}</strong></li>`).join('');
   }
@@ -117,7 +108,7 @@ swapReqBtn.addEventListener('click', async () => {
       method: 'POST',
       body: JSON.stringify({ type: 'swap', requester: myName, from: myName, to: colleague, day: Number(dayIdx), month: keyMonth })
     });
-    if (!r.ok) return alert('Erro ao enviar solicitação (admin pode não estar configurado)');
+    if (!r.ok) return alert('Erro ao enviar solicitação');
     alert('Solicitação enviada');
     renderSwaps();
   } catch (err) { alert('Erro de rede'); }
@@ -157,16 +148,21 @@ chatSend.addEventListener('click', async () => {
   loadChat();
 });
 
-// change password (calls admin endpoint? In this version we allow employee to change own password via PUT /api/users/:id if API allows - but admin-only protects)
 changePassForm && changePassForm.addEventListener('submit', async e=>{
   e.preventDefault();
-  alert('Alteração de senha por API não implementada neste build. Peça ao gerente alterar ou implemente endpoint PUT /api/users/:id para self-update.');
+  const oldP = document.getElementById('old-pass').value;
+  const newP = document.getElementById('new-pass').value;
+  const newP2 = document.getElementById('new-pass2').value;
+  if (newP !== newP2) return alert('Senhas não batem');
+  const id = sessionStorage.getItem('funcionario_id');
+  if (!id) return alert('ID não encontrado');
+  const r = await apiFetch(`/api/users/${id}/self`, { method: 'PUT', body: JSON.stringify({ oldPassword: oldP, newPassword: newP }) });
+  if (!r.ok) { const j = await r.json(); return alert(j.error || 'Erro ao alterar senha'); }
+  alert('Senha alterada com sucesso');
 });
 
-// logout
 logoutBtn.addEventListener('click', ()=> { sessionStorage.clear(); window.location.href='employee.html'; });
 
-// navigation months
 prevBtn.addEventListener('click', ()=> { mes--; if (mes<0){ mes=11; ano--; } refresh(); });
 nextBtn.addEventListener('click', ()=> { mes++; if (mes>11){ mes=0; ano++; } refresh(); });
 

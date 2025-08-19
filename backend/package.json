@@ -1,5 +1,5 @@
 {
-  "name": "escala-backend",
+  "name": "escala-facil",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
@@ -12,7 +12,8 @@
     "express": "^4.18.2",
     "helmet": "^7.0.0",
     "jsonwebtoken": "^9.0.0",
-    "mysql2": "^3.5.0"
+    "mysql2": "^3.5.0",
+    "morgan": "^1.10.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"

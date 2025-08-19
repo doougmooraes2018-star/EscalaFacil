@@ -1,7 +1,7 @@
-// docs/js/pages/swap.js (admin)
+// admin swap approvals
 const swapListEl = document.getElementById('swap-list');
-let tokenAdmin = sessionStorage.getItem('token');
-if (!tokenAdmin) { alert('Login admin necessário.'); window.location.href='index.html'; }
+
+if (!sessionStorage.getItem('token')) { alert('Login admin necessário'); location.href = '/'; }
 
 async function loadSwaps(){
   try {
@@ -16,8 +16,8 @@ async function loadSwaps(){
             <div style="font-size:.85rem;color:#666">${s.ts}</div>
           </div>
           <div>
-            <button onclick="approveSwap(${s.id})">✅</button>
-            <button onclick="rejectSwap(${s.id})">❌</button>
+            ${s.status === 'pendente' ? `<button onclick="approveSwap(${s.id})">✅</button>
+            <button onclick="rejectSwap(${s.id})">❌</button>` : `<strong>${s.status}</strong>`}
           </div>
         </div>
       </li>`).join('');

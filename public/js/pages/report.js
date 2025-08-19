@@ -1,4 +1,3 @@
-// docs/js/pages/report.js
 const btnEscalaCsv = document.getElementById('export-escala');
 const btnChatCsv = document.getElementById('export-chat');
 

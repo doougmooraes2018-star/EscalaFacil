@@ -1,4 +1,4 @@
-// employee.js - login por nome+telefone ou nome+senha
+// login funcionário
 const form = document.getElementById('login-form');
 form.addEventListener('submit', async e => {
   e.preventDefault();
@@ -9,9 +9,9 @@ form.addEventListener('submit', async e => {
   const payload = telefone ? { username: nome, telefone } : { username: nome, password: senha };
 
   try {
-    const res = await fetch(window.API_URL + '/api/auth/login', {
+    const res = await fetch('/api/auth/login', {
       method: 'POST',
-      headers: { 'Content-Type':'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
     const j = await res.json();
