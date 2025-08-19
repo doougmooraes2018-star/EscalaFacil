@@ -1,7 +1,10 @@
-// public/js/app.js (use este conteúdo)
+// public/js/app.js - helper global que usa caminho relativo por padrão
 (function(global){
+  // Se quiser apontar para outro host, defina window.API_URL antes de carregar este arquivo.
   const API_BASE = (typeof global.API_URL === 'string' && global.API_URL.trim()) ? global.API_URL.replace(/\/$/,'') : '';
+
   global.API_BASE = API_BASE;
+
   global.apiFetch = async function(path, opts = {}) {
     const url = path.startsWith('http') ? path : (API_BASE + path);
     const token = sessionStorage.getItem('token');
