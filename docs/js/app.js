@@ -1,32 +1,22 @@
-// app.js — comportamentos globais
+// app.js - config global do frontend
+const API_URL = '<REPLACE_WITH_BACKEND_URL>'; // <<--- substitua pelo URL do seu backend (ex: https://escala-backend.up.railway.app)
+window.API_URL = API_URL;
 
-// páginas administrativas que exigem gerente
-const adminPages = ['dashboard.html','funcionarios.html','escala.html','swap.html','availability.html','report.html'];
-
-// current page file
-const currentPage = location.pathname.split('/').pop();
-
-// se for página admin e não houver gerente, redireciona ao index (login)
-if (adminPages.includes(currentPage)) {
-  const gerente = localStorage.getItem('gerente') || sessionStorage.getItem('gerente_session');
-  if (!gerente) {
-    window.location.href = 'index.html';
+// helper fetch com token
+async function apiFetch(path, opts = {}) {
+  const token = sessionStorage.getItem('token');
+  const headers = opts.headers || {};
+  headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(API_URL + path, { ...opts, headers });
+  if (res.status === 401) {
+    // redirect to login if unauthorized
+    if (!location.pathname.endsWith('employee.html') && !location.pathname.endsWith('index.html')) {
+      alert('Sessão expirada. Faça login novamente.');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('funcionario');
+      window.location.href = 'employee.html';
+    }
   }
-}
-
-// Registra service worker (se existir)
-if ('serviceWorker' in navigator) {
-  try {
-    navigator.serviceWorker.register('js/sw.js').catch(()=>{});
-  } catch(e){/*sw falha não crítica*/}
-}
-
-// Solicita permissão de Notificação (apenas se ainda não decidiu)
-if ('Notification' in window && Notification.permission === 'default') {
-  Notification.requestPermission().catch(()=>{/*não crítico*/});
-}
-
-// Utilitário: carregar JSON seguro do localStorage
-function getLS(key, fallback) {
-  try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch(e){ return fallback; }
+  return res;
 }

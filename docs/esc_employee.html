@@ -1,18 +1,16 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>EscalaFácil - Meu Perfil</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Meu Perfil — EscalaFácil</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
   <header>
     <h1>Portal do Funcionário</h1>
     <button id="logout-btn" class="btn-back">Logout</button>
   </header>
-
   <main>
     <section class="portal-section">
       <h2>Minha Escala Mensal</h2>
@@ -20,7 +18,7 @@
         <button id="prev-month">←</button>
         <span id="mes-ano"></span>
         <button id="next-month">→</button>
-        <button id="request-off-btn" class="small-btn" style="margin-left:8px;">Solicitar Folga</button>
+        <button id="request-off-btn">Solicitar Folga</button>
       </div>
       <div id="calendar-header" class="calendar-row">
         <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div>
@@ -30,15 +28,20 @@
     </section>
 
     <section class="portal-section">
-      <h2>Solicitar Troca de Folga</h2>
-      <label>Dia:
-        <select id="swap-day"></select>
-      </label>
-      <label>Com colega:
-        <select id="swap-with"></select>
-      </label>
+      <h2>Solicitar Troca</h2>
+      <label>Dia: <select id="swap-day"></select></label>
+      <label>Com colega: <select id="swap-with"></select></label>
       <button id="swap-request">Enviar Solicitação</button>
       <ul id="swap-list" class="swap-list"></ul>
+    </section>
+
+    <section class="portal-section">
+      <h2>Chat</h2>
+      <div id="chat-window" class="chat-window"></div>
+      <div class="chat-input">
+        <input id="chat-msg" placeholder="Mensagem..." />
+        <button id="chat-send">Enviar</button>
+      </div>
     </section>
 
     <section class="portal-section">
@@ -50,15 +53,6 @@
         <input type="password" id="new-pass2" placeholder="Repita nova senha" />
         <button type="submit">Alterar Senha</button>
       </form>
-    </section>
-
-    <section class="portal-section">
-      <h2>Chat Interno</h2>
-      <div id="chat-window" class="chat-window"></div>
-      <div class="chat-input">
-        <input type="text" id="chat-msg" placeholder="Digite sua mensagem..." />
-        <button id="chat-send">Enviar</button>
-      </div>
     </section>
   </main>
 

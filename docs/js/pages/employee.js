@@ -1,31 +1,27 @@
-// pages/employee.js
+// employee.js - login por nome+telefone ou nome+senha
 const form = document.getElementById('login-form');
-
-form.addEventListener('submit', e => {
+form.addEventListener('submit', async e => {
   e.preventDefault();
-  const nome    = document.getElementById('nome').value.trim();
-  const telefone= document.getElementById('telefone').value.trim();
-  const senha   = document.getElementById('senha').value.trim();
+  const nome = document.getElementById('nome').value.trim();
+  const telefone = document.getElementById('telefone').value.trim();
+  const senha = document.getElementById('senha').value.trim();
 
-  const funcionarios = JSON.parse(localStorage.getItem('funcionarios')||'[]');
+  const payload = telefone ? { username: nome, telefone } : { username: nome, password: senha };
 
-  // primeiro: tentar match por nome + telefone (se telefone preenchido)
-  let user = null;
-  if (telefone) {
-    user = funcionarios.find(f => f.nome === nome && (f.telefone === telefone));
+  try {
+    const res = await fetch(window.API_URL + '/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const j = await res.json();
+    if (!res.ok) return alert(j.error || 'Erro no login');
+    sessionStorage.setItem('token', j.token);
+    sessionStorage.setItem('funcionario', j.user.nome);
+    sessionStorage.setItem('funcionario_id', j.user.id);
+    window.location.href = 'esc_employee.html';
+  } catch (err) {
+    console.error(err);
+    alert('Erro de rede');
   }
-
-  // se não encontrou e senha foi fornecida, tentar nome+senha
-  if (!user && senha) {
-    user = funcionarios.find(f => f.nome === nome && f.senha === senha);
-  }
-
-  // se ainda não encontrou, tentar apenas nome (não recomendado) — rejeitar
-  if (!user) return alert('Funcionário não encontrado. Verifique nome/telefone ou senha.');
-
-  // salva sessão
-  sessionStorage.setItem('funcionario', user.nome);
-  // salva também um token simples para possibilitar "alterar senha" localmente
-  sessionStorage.setItem('funcionario_id', user.id || user.nome);
-  window.location.href = 'esc_employee.html';
 });
