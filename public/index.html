@@ -28,23 +28,25 @@
 
   <script src="js/app.js"></script>
   <script>
-    document.getElementById('admin-login').addEventListener('submit', async e => {
-      e.preventDefault();
-      const username = document.getElementById('adm-user').value.trim();
-      const password = document.getElementById('adm-pass').value.trim();
-      try {
-        const r = await fetch(window.API_URL + '/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type':'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-        const j = await r.json();
-        if (!r.ok) return alert(j.error || 'Erro login');
-        sessionStorage.setItem('token', j.token);
-        sessionStorage.setItem('gerente', j.user.nome);
-        window.location.href = 'dashboard.html';
-      } catch (err) { alert('Erro de rede'); }
-    });
-  </script>
+  document.getElementById('admin-login').addEventListener('submit', async e => {
+    e.preventDefault();
+    const username = document.getElementById('adm-user').value.trim();
+    const password = document.getElementById('adm-pass').value.trim();
+    try {
+      // USANDO CAMINHO RELATIVO: /api/auth/login
+      const r = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const j = await r.json();
+      if (!r.ok) return alert(j.error || 'Erro login');
+      sessionStorage.setItem('token', j.token);
+      sessionStorage.setItem('gerente', j.user.nome);
+      window.location.href = 'dashboard.html';
+    } catch (err) { alert('Erro de rede'); }
+  });
+</script>
+
 </body>
 </html>
