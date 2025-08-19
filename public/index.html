@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>EscalaFácil — Login</title>
   <link rel="stylesheet" href="css/style.css">
+  <meta name="theme-color" content="#2b8aed">
 </head>
 <body>
   <div class="container center">
@@ -26,29 +27,40 @@
     </section>
   </div>
 
+  <!-- helper global (certifique-se de que public/js/app.js existe e está atualizado) -->
   <script src="js/app.js"></script>
-    <script>
+
+  <!-- login: usa rota RELATIVA (/api/auth/login) -->
+  <script>
     document.getElementById('admin-login').addEventListener('submit', async e => {
       e.preventDefault();
       const username = document.getElementById('adm-user').value.trim();
       const password = document.getElementById('adm-pass').value.trim();
+
       try {
-        // ROTA RELATIVA - quando front e back estão no mesmo domínio
-        const r = await fetch('/api/auth/login', {
+        // ROTA RELATIVA — funciona quando front e back são servidos juntos pelo mesmo domínio
+        const res = await fetch('/api/auth/login', {
           method: 'POST',
-          headers: { 'Content-Type':'application/json' },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password })
         });
-        const j = await r.json();
-        if (!r.ok) return alert(j.error || 'Erro login');
-        sessionStorage.setItem('token', j.token);
-        sessionStorage.setItem('gerente', j.user.nome);
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          return alert(data.error || 'Erro no login — verifique usuário/senha');
+        }
+
+        // salva sessão e redireciona
+        sessionStorage.setItem('token', data.token);
+        if (data.user && data.user.nome) {
+          sessionStorage.setItem('gerente', data.user.nome);
+        }
         window.location.href = 'dashboard.html';
       } catch (err) {
-        console.error(err);
-        alert('Erro de rede');
+        console.error('Login error:', err);
+        alert('Erro de rede. Tente novamente.');
       }
     });
-    </script>
+  </script>
 </body>
 </html>
