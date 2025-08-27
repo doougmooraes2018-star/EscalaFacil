@@ -1,68 +1,43 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>EscalaFácil - Dashboard</title>
-  <link rel="stylesheet" href="css/style.css" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>EscalaFácil - Dashboard</title>
+<link rel="stylesheet" href="css/style.css" />
 </head>
 
+
 <body>
-  <header>
-    <h1>Dashboard</h1>
-    <button id="logout-admin" class="btn-back">Logout</button>
-  </header>
+<header>
+<h1>Dashboard</h1>
+<button id="logout-admin" class="btn-back">Logout</button>
+</header>
 
-  <nav class="menu">
-    <a href="funcionarios.html">Funcionários</a>
-    <a href="escala.html">Escala</a>
-    <a href="swap.html">Trocas de Folga</a>
-    <a href="availability.html">Disponibilidade</a>
-    <a href="report.html">Relatórios</a>
-    <a href="employee.html">Portal Funcionário</a>
-  </nav>
 
-  <main class="center container">
-    <p>Bem-vindo, <strong id="nome-gerente"></strong>!</p>
+<nav class="menu">
+<a href="funcionarios.html">Funcionários</a>
+<a href="escala.html">Escala</a>
+<a href="swap.html">Trocas de Folga</a>
+<a href="availability.html">Disponibilidade</a>
+<a href="report.html">Relatórios</a>
+<a href="employee.html">Portal Funcionário</a>
+</nav>
 
-    <div id="swap-notif" class="swap-notif hidden" style="margin-top:1rem;display:flex;align-items:center;gap:.6rem;">
-      <span><strong id="swap-count">0</strong> novas solicitações</span>
-      <button id="open-swaps" class="small-btn">Abrir solicitações</button>
-    </div>
-  </main>
 
-  <script src="js/app.js"></script>
-  <script>
-    const gerente = localStorage.getItem('gerente') || sessionStorage.getItem('gerente_session') || 'Gerente';
-    document.getElementById('nome-gerente').textContent = gerente;
+<main class="center container">
+<p>Bem-vindo, <strong id="nome-gerente"></strong>!</p>
 
-    // contador de trocas pendentes
-    const swaps = JSON.parse(localStorage.getItem('swap_requests') || '[]');
-    const pending = swaps.filter(s => s.status === 'pendente').length;
-    if (pending > 0) {
-      document.getElementById('swap-count').textContent = pending;
-      document.getElementById('swap-notif').classList.remove('hidden');
-      document.getElementById('swap-notif').style.display = 'flex';
-    }
 
-    // abrir fila: tenta abrir a URL da última notificação do gerente
-    document.getElementById('open-swaps').addEventListener('click', () => {
-      const key = 'notifications_' + gerente;
-      const notes = JSON.parse(localStorage.getItem(key) || '[]');
-      if (notes && notes.length) {
-        const last = notes[notes.length - 1];
-        if (last.url) window.location.href = last.url;
-        else window.location.href = 'swap.html';
-      } else {
-        window.location.href = 'swap.html';
-      }
-    });
+<div id="swap-notif" class="swap-notif hidden" style="margin-top:1rem;display:flex;align-items:center;gap:.6rem;">
+<span><strong id="swap-count">0</strong> novas solicitações</span>
+<button id="open-swaps" class="small-btn">Abrir solicitações</button>
+</div>
+</main>
 
-    document.getElementById('logout-admin').addEventListener('click', () => {
-      localStorage.removeItem('gerente');
-      sessionStorage.removeItem('gerente_session');
-      window.location.href = 'index.html';
-    });
-  </script>
+
+<script src="js/app.js"></script>
+<!-- Script inline movido para js/dashboard-inline.js -->
+<script src="js/dashboard-inline.js"></script>
 </body>
 </html>

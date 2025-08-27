@@ -1,4 +1,4 @@
-// server.js - backend + serves frontend from /public
+// server.js - backend + serves frontend from ../public (corrigido)
 const express = require('express');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -10,7 +10,25 @@ const path = require('path');
 require('dotenv').config(); // optional: if you create .env locally
 
 const app = express();
-app.use(helmet());
+// desativa a CSP padrão do helmet e cria uma configuração controlada
+app.use(helmet({
+  contentSecurityPolicy: false
+}));
+
+// CSP customizada — inclui o hash do script inline (substitua pelo seu hash se necessário)
+app.use(helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: ["'self'"],
+    scriptSrc: ["'self'", "'sha256-DDdM2eJqgOtU3SY8+Q68rUBgSebfcW23cX5u8Hg6cyc='"],
+    styleSrc: ["'self'", "'unsafe-inline'"], // se você tiver <style> inline ou CSS inlined
+    imgSrc: ["'self'", "data:"],
+    connectSrc: ["'self'", "ws:", "http:", "https:"],
+    objectSrc: ["'none'"],
+    baseUri: ["'self'"],
+    frameAncestors: ["'none'"]
+  }
+}));
+
 app.use(express.json());
 app.use(morgan('tiny'));
 
@@ -85,8 +103,8 @@ async function initDb() {
       id INT AUTO_INCREMENT PRIMARY KEY,
       type VARCHAR(20) NOT NULL,
       requester VARCHAR(255),
-      \`from\` VARCHAR(255),
-      \`to\` VARCHAR(255),
+      ` + "`from` VARCHAR(255)," + `
+      ` + "`to` VARCHAR(255)," + `
       day INT,
       month VARCHAR(7),
       status VARCHAR(20) DEFAULT 'pendente',
@@ -97,7 +115,7 @@ async function initDb() {
   await p.execute(`
     CREATE TABLE IF NOT EXISTS chat (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      \`user\` VARCHAR(255),
+      ` + "`user` VARCHAR(255)," + `
       content TEXT,
       ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -265,7 +283,7 @@ app.post('/api/swaps', verifyToken, async (req, res) => {
   const { type, requester, from, to, day, month } = req.body;
   const p = await getPool();
   const [result] = await p.execute(
-    `INSERT INTO swaps (type, requester, \`from\`, \`to\`, day, month, status) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO swaps (type, requester, ` + "`from` , `to`" + `, day, month, status) VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [type, requester, from, to, day, month, 'pendente']
   );
   const insertId = result.insertId;
@@ -312,7 +330,7 @@ app.get('/api/chat', verifyToken, async (req, res) => {
 app.post('/api/chat', verifyToken, async (req, res) => {
   const { content } = req.body;
   const p = await getPool();
-  await p.execute(`INSERT INTO chat (\`user\`, content) VALUES (?, ?)`, [req.user.nome, content]);
+  await p.execute(`INSERT INTO chat (` + "`user` , content) VALUES (?, ?)", [req.user.nome, content]);
   res.json({ ok: true });
 });
 
@@ -332,7 +350,7 @@ app.get('/api/reports/escala_csv', verifyToken, adminOnly, async (req, res) => {
 
 app.get('/api/reports/chat_csv', verifyToken, adminOnly, async (req, res) => {
   const p = await getPool();
-  const [rows] = await p.execute(`SELECT ts, \`user\`, content FROM chat ORDER BY ts ASC`);
+  const [rows] = await p.execute(`SELECT ts, ` + "`user` , content FROM chat ORDER BY ts ASC");
   let out = 'ts,user,text\n';
   rows.forEach(r => {
     out += `"${new Date(r.ts).toISOString()}","${(r.user||'')}","${(r.content||'').replace(/"/g,'""')}"\n`;
@@ -340,10 +358,10 @@ app.get('/api/reports/chat_csv', verifyToken, adminOnly, async (req, res) => {
   res.header('Content-Type','text/csv').send(out);
 });
 
-// serve static frontend (public)
-app.use(express.static(path.join(__dirname, 'public')));
+// serve static frontend (public) — CORREÇÃO: usar pasta parent ../public
+app.use(express.static(path.join(__dirname, '..', 'public')));
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
 app.listen(PORT, () => {
